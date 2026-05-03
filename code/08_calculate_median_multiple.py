@@ -13,22 +13,21 @@ Output: data/clean/toronto_with_mm.csv
 
 import pandas as pd
 from pathlib import Path
+input_path = Path(__file__).parent.parent / "data" / "clean" / "toronto_raw.csv"
+output_path = Path(__file__).parent.parent / "data" / "clean" / "toronto_with_mm.csv"
 
-INPUT_PATH = Path(__file__).parent.parent / "data" / "clean" / "toronto_raw.csv"
-OUTPUT_PATH = Path(__file__).parent.parent / "data" / "clean" / "toronto_with_mm.csv"
-
-# Annual median household income for Toronto CMA, in CAD.
-# Source: Statistics Canada Table 11-10-0190-01.
-# 2024 is estimated from recent CIS trend pending official release.
+# Annual median household income for Toronto CMA, in CAD
+# Source: Statistics Canada Table 11-10-0190-01
+# 2024 is estimated from recent CIS trend pending official release
 # Toronto CMA median total household income (Economic families and persons not
 # in an economic family). Source: Statistics Canada Table 11-10-0190-01,
-# expressed in 2024 constant CAD dollars (i.e., already inflation-adjusted).
+# expressed in 2024 constant CAD dollars (i.e., already inflation-adjusted)
 # Income concept = "Median total income" (gross / pre-tax), which matches the
-# Demographia Median Multiple methodology.
+# Demographia Median Multiple methodology
 #
 # 2019 is estimated as $93,000 (extrapolated backward from 2020). All other
-# years are official Statistics Canada figures with data quality "A" or "B".
-TORONTO_INCOME_ANNUAL = {
+# years are official Statistics Canada figures with data quality "A" or "B"
+toronto_income_annual = {
     2019: 93_000,   # estimate (pre-2020 backward extrapolation)
     2020: 95_000,   # Stat Can, quality A
     2021: 96_700,   # Stat Can, quality B
@@ -76,10 +75,10 @@ def build_monthly_income(years_dict):
 
 
 def main():
-    df = pd.read_csv(INPUT_PATH)
+    df = pd.read_csv(input_path)
     print(f"Loaded {len(df)} rows from toronto_raw.csv")
 
-    income_monthly = build_monthly_income(TORONTO_INCOME_ANNUAL)
+    income_monthly = build_monthly_income(toronto_income_annual)
     print(f"Built {len(income_monthly)} months of interpolated income")
 
     df = df.merge(income_monthly, on="date", how="left")
@@ -90,8 +89,8 @@ def main():
     # Also calculate Price-to-Income ratio using AVERAGE price (some sources do this)
     df["price_income_ratio_avg"] = df["avg_price"] / df["income"]
 
-    df.to_csv(OUTPUT_PATH, index=False)
-    print(f"Saved to: {OUTPUT_PATH}\n")
+    df.to_csv(output_path, index=False)
+    print(f"Saved to: {output_path}\n")
 
     # Quick summary statistics by year
     print("Annual summary — Toronto Median Multiple:")

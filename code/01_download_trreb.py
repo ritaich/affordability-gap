@@ -1,6 +1,6 @@
 """
 01_download_trreb.py
-Downloads all TRREB Market Watch PDFs from January 2019 to December 2024.
+this code downloads all TRREB Market Watch PDFs from January 2019 to December 2024 so i will not have to do it manually 
 Saves them to /data/raw/trreb_pdfs/
 
 
@@ -10,36 +10,29 @@ import os
 import requests
 from pathlib import Path
 from time import sleep
-
-# ============ CONFIG ============
 START_YEAR = 2019
 END_YEAR = 2024
 URL_PATTERN = "https://trreb.ca/wp-content/files/market-stats/market-watch/mw{yy}{mm}.pdf"
 OUTPUT_DIR = Path(__file__).parent.parent / "data" / "raw" / "trreb_pdfs"
-SLEEP_BETWEEN_REQUESTS = 1.0  # be polite — 1 second between downloads
-
+SLEEP_BETWEEN_REQUESTS = 1.0  # 1 second between downloads so machine will not be tired 
 
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Saving PDFs to: {OUTPUT_DIR}")
     print()
-
     successful = 0
     failed = []
     skipped = 0
-
     for year in range(START_YEAR, END_YEAR + 1):
-        yy = str(year)[-2:]  # last 2 digits, e.g. 2019 → "19"
+        yy = str(year)[-2:]  # last 2 digits
         for month in range(1, 13):
-            mm = f"{month:02d}"  # zero-padded, e.g. 1 → "01"
+            mm = f"{month:02d}"  # zero-padded
             filename = f"mw{yy}{mm}.pdf"
             filepath = OUTPUT_DIR / filename
-
             if filepath.exists():
                 print(f"  ✓ {filename} already exists, skipping")
                 skipped += 1
                 continue
-
             url = URL_PATTERN.format(yy=yy, mm=mm)
             try:
                 response = requests.get(url, timeout=30)
@@ -61,7 +54,6 @@ def main():
     print(f"Done. Downloaded: {successful}, Skipped: {skipped}, Failed: {len(failed)}")
     if failed:
         print(f"Failed files: {failed}")
-
 
 if __name__ == "__main__":
     main()

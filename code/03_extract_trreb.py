@@ -1,13 +1,13 @@
 """
 03_extract_trreb.py
-Extracts monthly Toronto housing market data from all 72 TRREB Market Watch PDFs.
+here code extracts monthly Toronto housing market data from all 72 TRREB Market Watch PDFs so again i may not do it manually 
 Saves a clean CSV to data/clean/toronto_raw.csv
 
-Strategy: parse Page 3 of each PDF, find the "All TRREB Areas" row, extract
+parse Page 3 of each PDF, find the "All TRREB Areas" row, extract
 the 6 numeric fields we care about: Sales, AvgPrice, MedianPrice, NewListings,
-ActiveListings, AvgDaysOnMarket.
+ActiveListings, AvgDaysOnMarket
 
-Why Page 3: it has the cleanest summary table for the entire GTA in one row.
+Why Page 3, because it has the cleanest summary table for the entire GTA in one row
 """
 
 import re
@@ -15,13 +15,11 @@ import pdfplumber
 import pandas as pd
 from pathlib import Path
 
-# ============ CONFIG ============
 PDF_DIR = Path(__file__).parent.parent / "data" / "raw" / "trreb_pdfs"
 OUTPUT_PATH = Path(__file__).parent.parent / "data" / "clean" / "toronto_raw.csv"
 
-
 def parse_filename_to_date(filename):
-    """Convert 'mw1901.pdf' → ('2019-01', 2019, 1)."""
+    """Convert 'mw1901.pdf' into ('2019-01', 2019, 1)."""
     match = re.match(r"mw(\d{2})(\d{2})\.pdf", filename)
     if not match:
         return None
@@ -33,8 +31,8 @@ def parse_filename_to_date(filename):
 
 def clean_number(text):
     """
-    Strip $, commas, %, and whitespace, then convert to float.
-    Returns None if conversion fails.
+    Strip $, commas, %, and whitespace, then convert to float
+    Returns None if conversion fails
     """
     if text is None:
         return None
@@ -47,12 +45,12 @@ def clean_number(text):
 
 def extract_all_trreb_row(pdf_path):
     """
-    Open a TRREB PDF, find the page with the GTA-wide summary table,
-    and pull out the 11 numeric fields we need.
+    Opens a TRREB PDF, find the page with the GTA-wide summary table,
+    and pull out the 11 numeric fields i need
     Handles two label formats:
       - 'All TRREB Areas' (used in 2019-early 2020 and mid-2022 onwards)
       - 'TRREB Total'     (used during COVID-era reports, mid-2020 to mid-2022)
-    Returns a dict, or None if extraction fails.
+    Returns a dict, or None if extraction fails
     """
     with pdfplumber.open(pdf_path) as pdf:
         # Try pages 3, 4, 2 in order — TRREB sometimes shifts the table by one page.
@@ -67,15 +65,15 @@ def extract_all_trreb_row(pdf_path):
 def parse_summary_row(page_text):
     """
     From a page of text containing the summary table, find the GTA-wide
-    summary line and extract numeric fields.
+    summary line and extract numeric fields
 
     Handles three label formats:
-      - 'All TRREB Areas' (current style, mid-2022 onwards)
-      - 'TRREB Total'     (mid-2020 to early 2022 style)
-      - 'TREB Total'      (2019-early 2020 style, single R in TREB)
+       'All TRREB Areas' (current style, mid-2022 onwards)
+       'TRREB Total'     (mid-2020 to early 2022 style)
+       'TREB Total'      (2019-early 2020 style, single R in TREB)
 
-    Also handles the May 2022 PDF which has every value duplicated due to
-    overlapping text — we deduplicate adjacent identical tokens.
+    Also it handles the May 2022 PDF which has every value duplicated due to
+    overlapping text — we deduplicate adjacent identical tokens
     """
     LABELS = ("All TRREB Areas", "TRREB Total", "TREB Total")
     lines = page_text.split("\n")
@@ -92,23 +90,17 @@ def parse_summary_row(page_text):
 
         data_part = stripped[len(matched_label):].strip()
 
-        # Strip TRREB's Ab/c markers around active-listings (newer PDFs only)
+        # Strips TRREB's Ab/c markers around active-listings 
         data_part = re.sub(r"A([\d,\.]+)b", r"\1", data_part)
         data_part = data_part.replace("c", "")
 
         tokens = data_part.split()
-        
-
-        # Handle the May 2022 doubled-token glitch...
+        # Handles the May 2022 doubled-token glitch...
         tokens = _deduplicate_doubled_tokens(tokens)
-        
-
         if len(tokens) < 10:
-            
             return None
 
-        # Map tokens to fields. The first 10 columns are always the same;
-        # column 11 (Avg. PDOM) was added in 2020. For 2019 data, set it to None.
+        # Map tokens to fields. The first 10 columns are always the same
         result = {
             "sales": clean_number(tokens[0]),
             "dollar_volume": clean_number(tokens[1]),
@@ -123,15 +115,14 @@ def parse_summary_row(page_text):
             "avg_pdom": clean_number(tokens[10]) if len(tokens) >= 11 else None,
         }
         return result
-
     return None
 
 
 def _deduplicate_doubled_tokens(tokens):
     """
-    Some PDFs (notably mw2205) have overlapping text that causes every value
+    Some PDFs (espesially mw2205) have overlapping text that causes every value
     to appear twice in sequence. If the first half of the list is identical
-    to the second half, return just the first half.
+    to the second half, return just the first half
     """
     n = len(tokens)
     if n < 4 or n % 2 != 0:

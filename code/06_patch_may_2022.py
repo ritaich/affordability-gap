@@ -1,21 +1,19 @@
 """
 06_patch_may_2022.py
-Adds May 2022 (mw2205.pdf) data manually.
+Adds May 2022 (mw2205.pdf) data manually
 
-Reason: mw2205.pdf has overlapping/doubled text from a PDF rendering glitch
+Reason why i did that is because  mw2205.pdf has overlapping/doubled text from a PDF rendering glitch
 that prevented automated extraction. Values verified manually against the
 PDF, cross-checked against the EE-typed dataset which independently produced
-identical numbers (avg_price 1,212,806).
+identical numbers (avg_price 1,212,806)
 
-This script is idempotent — running it multiple times produces the same
-result, so it's safe to re-run after every extractor run.
+This script is idempotent : running it multiple times produces the same
+result, so it's safe to re-run after every extractor run
 """
 
 import pandas as pd
 from pathlib import Path
-
 CSV_PATH = Path(__file__).parent.parent / "data" / "clean" / "toronto_raw.csv"
-
 MAY_2022 = {
     "date": "2022-05",
     "year": 2022,
@@ -38,7 +36,7 @@ def main():
     df = pd.read_csv(CSV_PATH)
     print(f"Loaded {len(df)} rows from {CSV_PATH.name}")
 
-    # Idempotent: drop any existing 2022-05 row before adding
+    # Idempotent, drop any existing 2022-05 row before adding
     df = df[df["date"] != "2022-05"]
 
     df = pd.concat([df, pd.DataFrame([MAY_2022])], ignore_index=True)

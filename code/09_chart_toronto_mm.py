@@ -1,20 +1,11 @@
-"""
-09_chart_toronto_mm.py
-
-Plots Toronto's Median Multiple from Jan 2019 to Dec 2024, with key
-macroeconomic events annotated. This is the first visual deliverable
-of the project.
-"""
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from pathlib import Path
 
-INPUT_PATH = Path(__file__).parent.parent / "data" / "clean" / "toronto_with_mm.csv"
-OUTPUT_PATH = Path(__file__).parent.parent / "visualizations" / "01_toronto_median_multiple.png"
-
-# Project-wide chart styling (same as Session 3 setup)
+input_path = Path(__file__).parent.parent / "data" / "clean" / "toronto_with_mm.csv"
+output_path = Path(__file__).parent.parent / "visualizations" / "01_toronto_median_multiple.png"
+# Project-wide chart styling 
 mpl.rcParams['font.family'] = 'Helvetica'
 mpl.rcParams['font.size'] = 11
 mpl.rcParams['axes.titlesize'] = 13
@@ -24,7 +15,6 @@ mpl.rcParams['axes.spines.right'] = False
 mpl.rcParams['axes.grid'] = True
 mpl.rcParams['grid.alpha'] = 0.25
 mpl.rcParams['grid.linestyle'] = '--'
-
 CITY_COLORS = {
     'Toronto':   '#C8102E',
     'Vancouver': '#1B5E20',
@@ -32,7 +22,6 @@ CITY_COLORS = {
     'New York':  '#E8A317',
 }
 
-# Key events to annotate on the chart
 EVENTS = [
     ("2020-03", "COVID-19 onset"),
     ("2022-03", "First BoC rate hike"),

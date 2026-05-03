@@ -1,10 +1,8 @@
-"""Diagnostic: check the layout of multiple failing PDFs."""
+"""Diagnostic: check the layout of multiple failing pdfs"""
 import pdfplumber
 from pathlib import Path
-
 PDFS_TO_CHECK = ["mw1901.pdf", "mw2001.pdf", "mw2205.pdf"]
 PDF_DIR = Path(__file__).parent.parent / "data" / "raw" / "trreb_pdfs"
-
 for pdf_name in PDFS_TO_CHECK:
     path = PDF_DIR / pdf_name
     print(f"\n{'#' * 70}")
