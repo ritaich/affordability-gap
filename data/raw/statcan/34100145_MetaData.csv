@@ -1,0 +1,37 @@
+﻿"Cube Title","Product Id","CANSIM Id",URL,"Cube Notes","Archive Status",Frequency,"Start Reference Period","End Reference Period","Total number of dimensions"
+"Canada Mortgage and Housing Corporation, conventional mortgage lending rate, 5-year term","34100145","027-0015","https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3410014501",1;2,"CURRENT - a cube available to the public and that is current","Monthly","1951-01-01","2026-03-01","1",
+
+"Dimension ID","Dimension name","Dimension Notes","Dimension Definitions"
+"1","Geography",,""
+
+"Dimension ID","Member Name","Classification Code","Member ID","Parent Member ID",Terminated,"Member Notes","Member Definitions"
+"1","Canada","[11124]","1","","",,
+
+Symbol Legend
+Description,Symbol
+"not available for a specific reference period","..",
+"less than the limit of detection","<LOD",
+"value rounded to 0 (zero) where there is a meaningful distinction between true zero and the value that was rounded","0s",
+"data quality: excellent","A",
+"data quality: very good","B",
+"data quality: good","C",
+"data quality: acceptable","D",
+"use with caution","E",
+"too unreliable to be published","F",
+"not applicable","...",
+"preliminary","p",
+"revised","r",
+"suppressed to meet the confidentiality requirements of the Statistics Act","x",
+"terminated","t",
+
+"Survey Code","Survey Name"
+"7505","Canada Mortgage and Housing Corporation"
+
+"Subject Code","Subject Name"
+"34","Construction"
+
+"Note ID",Note
+1,"Geographical areas modified every 5 years to reflect most recent census definitions, therefore, data are not strictly comparable historically."
+2,"These data are obtained from Canada Mortgage and Housing Corporation (CMHC) and are provided subject to <a href="https://www.cmhc-schl.gc.ca/about-us/terms-conditions/hmip-terms-conditions" rel="external noopener noreferrer" target="_blank">CMHC Licence Agreement for the Use of Data (opens new window)</a>."
+
+"Correction ID","Correction Date","Correction Note"
