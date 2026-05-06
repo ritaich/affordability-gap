@@ -1,111 +1,112 @@
-"""
-08_calculate_median_multiple.py
-
-Adds median household income to the Toronto dataset (linearly interpolated from
-annual Statistics Canada figures to monthly), then calculates the Median Multiple:
-  MM = Median house price / Median annual household income
-
-Income source: Statistics Canada Table 11-10-0190-01 (median total household
-income, Toronto CMA). 2024 is an estimate based on the recent 3.6% YoY trend.
-
-Output: data/clean/toronto_with_mm.csv
-"""
+# i calculate median multiple for each city using:
+#   - crea hpi composite benchmark for canadian cities
+#   - uk land registry hpi for london
+#   - statcan / ons median household income (annual, interpolated)
+# median multiple is currency-independent (ratio), so i don't need fx here
 
 import pandas as pd
 from pathlib import Path
-input_path = Path(__file__).parent.parent / "data" / "clean" / "toronto_raw.csv"
-output_path = Path(__file__).parent.parent / "data" / "clean" / "toronto_with_mm.csv"
 
-# Annual median household income for Toronto CMA, in CAD
-# Source: Statistics Canada Table 11-10-0190-01
-# 2024 is estimated from recent CIS trend pending official release
-# Toronto CMA median total household income (Economic families and persons not
-# in an economic family). Source: Statistics Canada Table 11-10-0190-01,
-# expressed in 2024 constant CAD dollars (i.e., already inflation-adjusted)
-# Income concept = "Median total income" (gross / pre-tax), which matches the
-# Demographia Median Multiple methodology
-#
-# 2019 is estimated as $93,000 (extrapolated backward from 2020). All other
-# years are official Statistics Canada figures with data quality "A" or "B"
-toronto_income_annual = {
-    2019: 93_000,   # estimate (pre-2020 backward extrapolation)
-    2020: 95_000,   # Stat Can, quality A
-    2021: 96_700,   # Stat Can, quality B
-    2022: 93_900,   # Stat Can, quality A
-    2023: 94_600,   # Stat Can, quality A
-    2024: 94_300,   # Stat Can, quality A
+base = Path(__file__).parent.parent
+canada_path = base / "data/clean/crea_hpi_two_cities.csv"
+london_path = base / "data/clean/london_prices.csv"
+out_path = base / "data/clean/cities_with_mm.csv"
+
+# annual median household income, sources documented in methodology section 4
+# all values in 2024 constant currency (CAD for canada, GBP for london)
+incomes = {
+    "Toronto": {
+        2019: 93000,    # backward extrapolation from 2020
+        2020: 95000,
+        2021: 96700,
+        2022: 93900,
+        2023: 94600,
+        2024: 94300,
+    },
+    "Vancouver": {
+        2019: 92000,    # backward extrapolation
+        2020: 92300,
+        2021: 90100,
+        2022: 87700,
+        2023: 87500,
+        2024: 89900,
+    },
+    "London": {
+        2019: 47000,    # estimated from ONS regional series
+        2020: 49500,
+        2021: 50500,
+        2022: 51000,
+        2023: 51500,
+        2024: 52000,
+    },
 }
 
 
-def build_monthly_income(years_dict):
-    """
-    Build a monthly time series of income by linearly interpolating between
-    annual values.
-
-    We anchor each year's value at mid-year (June) — this is the standard
-    interpolation approach used by Stats Can and the Bank of Canada when
-    moving annual to monthly data. So 2019's $89,700 is anchored at June 2019,
-    2020's $93,000 is anchored at June 2020, and we linearly interpolate
-    between consecutive June values.
-    """
-    # Build anchor points: one row per year at June 1
+def monthly_income_series(annual):
+    # i anchor each year at june and linearly interpolate between
+    # this matches what statcan / boc / ons all do
     anchors = pd.DataFrame({
-        "date": [pd.Timestamp(year=y, month=6, day=1) for y in years_dict.keys()],
-        "income": list(years_dict.values()),
+        "date": [pd.Timestamp(year=y, month=6, day=1) for y in annual],
+        "income": list(annual.values()),
     }).set_index("date")
 
-    # Build a full monthly index covering Jan of first year to Dec of last year
-    first_year = min(years_dict.keys())
-    last_year = max(years_dict.keys())
-    full_index = pd.date_range(
-        start=f"{first_year}-01-01",
-        end=f"{last_year}-12-01",
-        freq="MS",  # Month Start
-    )
+    yr_min, yr_max = min(annual), max(annual)
+    full_idx = pd.date_range(f"{yr_min}-01-01", f"{yr_max}-12-01", freq="MS")
+    s = anchors.reindex(anchors.index.union(full_idx)).sort_index()
+    s["income"] = s["income"].interpolate(method="time")
+    s = s.reindex(full_idx)
 
-    # Reindex to monthly and interpolate
-    monthly = anchors.reindex(anchors.index.union(full_index)).sort_index()
-    monthly["income"] = monthly["income"].interpolate(method="time")
-    monthly = monthly.reindex(full_index)  # keep only the monthly slots
-
-    # Format the date column as YYYY-MM strings to match toronto_raw.csv
-    out = monthly.reset_index().rename(columns={"index": "date"})
+    out = s.reset_index().rename(columns={"index": "date"})
     out["date"] = out["date"].dt.strftime("%Y-%m")
     return out
 
 
-def main():
-    df = pd.read_csv(input_path)
-    print(f"Loaded {len(df)} rows from toronto_raw.csv")
+# load price data from both sources
+canada = pd.read_csv(canada_path)
+canada = canada.rename(columns={"benchmark_sa_cad": "price_local"})
+canada["currency"] = "CAD"
+canada = canada[["city", "date", "price_local", "currency", "hpi_sa"]]
+canada = canada.rename(columns={"hpi_sa": "hpi"})
 
-    income_monthly = build_monthly_income(toronto_income_annual)
-    print(f"Built {len(income_monthly)} months of interpolated income")
+london = pd.read_csv(london_path)
+london = london.rename(columns={"avg_price_gbp": "price_local"})
+london["currency"] = "GBP"
+london = london[["city", "date", "price_local", "currency", "hpi"]]
 
-    df = df.merge(income_monthly, on="date", how="left")
+# stack all three cities
+prices = pd.concat([canada, london], ignore_index=True)
 
-    # Calculate Median Multiple = Median Price / Annual Median Household Income
-    df["median_multiple"] = df["median_price"] / df["income"]
+# attach income and compute median multiple
+all_rows = []
+for city, annual_inc in incomes.items():
+    inc = monthly_income_series(annual_inc)
+    sub = prices[prices["city"] == city].copy()
+    merged = sub.merge(inc, on="date", how="left")
+    merged["median_multiple"] = merged["price_local"] / merged["income"]
+    all_rows.append(merged)
 
-    # Also calculate Price-to-Income ratio using AVERAGE price (some sources do this)
-    df["price_income_ratio_avg"] = df["avg_price"] / df["income"]
+combined = pd.concat(all_rows, ignore_index=True)
+combined = combined.sort_values(["city", "date"]).reset_index(drop=True)
 
-    df.to_csv(output_path, index=False)
-    print(f"Saved to: {output_path}\n")
+out_path.parent.mkdir(parents=True, exist_ok=True)
+combined.to_csv(out_path, index=False)
+print(f"saved {len(combined)} rows to {out_path}\n")
 
-    # Quick summary statistics by year
-    print("Annual summary — Toronto Median Multiple:")
-    summary = (df.groupby("year")
-                 .agg(median_price=("median_price", "mean"),
-                      income=("income", "mean"),
-                      median_multiple=("median_multiple", "mean"))
-                 .round(2))
-    print(summary.to_string())
+# annual summary so i can spot-check
+combined["yr"] = combined["date"].str[:4]
+summary = (combined.groupby(["city", "yr"])
+           .agg(price=("price_local", "mean"),
+                income=("income", "mean"),
+                mm=("median_multiple", "mean"))
+           .round(2))
+print("annual median multiple by city (price in local currency):")
+print(summary.to_string())
+combined = combined.drop(columns=["yr"])
 
-    print(f"\nPeak Median Multiple: {df['median_multiple'].max():.2f} "
-          f"in {df.loc[df['median_multiple'].idxmax(), 'date']}")
-    print(f"Trough Median Multiple: {df['median_multiple'].min():.2f} "
-          f"in {df.loc[df['median_multiple'].idxmin(), 'date']}")
-
-
-if __name__ == "__main__":
-    main()
+print("\npeak and trough by city:")
+for city in incomes:
+    s = combined[combined["city"] == city]
+    pk = s.loc[s["median_multiple"].idxmax()]
+    tr = s.loc[s["median_multiple"].idxmin()]
+    print(f"  {city:<10} peak {pk['median_multiple']:>5.2f} ({pk['date']}) | "
+          f"trough {tr['median_multiple']:>5.2f} ({tr['date']})")
