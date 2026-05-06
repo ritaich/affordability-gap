@@ -1,95 +1,116 @@
-# three-city affordability chart with demographia bands as background
-# i annotate key macro events so the story is readable
+# i make a plotly version because the matplotlib show window is flaky on mac
+# and i want hover tooltips for reading exact values
+# plotly saves an html file that opens in chrome
 
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib as mpl
+import plotly.graph_objects as go
+import subprocess
 from pathlib import Path
 
 base = Path(__file__).parent.parent
 in_path = base / "data/clean/cities_with_mm.csv"
-out_path = base / "visualizations/03_three_cities_median_multiple.png"
-
-# styling consistent with previous charts
-mpl.rcParams['font.family'] = 'Helvetica'
-mpl.rcParams['font.size'] = 11
-mpl.rcParams['axes.titlesize'] = 13
-mpl.rcParams['axes.titleweight'] = 'bold'
-mpl.rcParams['axes.spines.top'] = False
-mpl.rcParams['axes.spines.right'] = False
-mpl.rcParams['axes.grid'] = True
-mpl.rcParams['grid.alpha'] = 0.25
-mpl.rcParams['grid.linestyle'] = '--'
+out_path = base / "visualizations/04_four_cities_median_multiple.html"
 
 city_colors = {
-    "Toronto":   "#C8102E",
-    "Vancouver": "#1B5E20",
-    "London":    "#1D3557",
+    "Toronto":   "#02FF35",
+    "Vancouver": "#FF00BB",
+    "London":    "#FFF700",
+    "New York":  "#00E5FF",
 }
 
+# demographia rating bands shown as background rectangles
 bands = [
-    (3.0, 4.0,  "#E1F5EE", "moderately unaffordable"),
-    (4.0, 5.0,  "#FCEFD4", "seriously unaffordable"),
-    (5.0, 8.9,  "#FCE3CB", "severely unaffordable"),
-    (8.9, 20.0, "#FBD0D0", "impossibly unaffordable"),
+    (3.0, 4.0,  "rgba(225, 245, 238, 0.5)", "moderately unaffordable"),
+    (4.0, 5.0,  "rgba(252, 239, 212, 0.5)", "seriously unaffordable"),
+    (5.0, 8.9,  "rgba(252, 227, 203, 0.5)", "severely unaffordable"),
+    (8.9, 20.0, "rgba(251, 208, 208, 0.5)", "impossibly unaffordable"),
 ]
 
 events = [
-    ("2020-03", "covid"),
-    ("2022-03", "first canadian rate hike"),
-    ("2023-07", "peak rates"),
+    ("2020-03-01", "covid"),
+    ("2022-03-01", "first canadian rate hike"),
+    ("2023-07-01", "peak rates"),
 ]
 
 df = pd.read_csv(in_path)
 df["d"] = pd.to_datetime(df["date"], format="%Y-%m")
 
-fig, ax = plt.subplots(figsize=(12, 7))
+fig = go.Figure()
 
+# i add the rating bands first so they sit behind everything
 for low, high, color, _ in bands:
-    ax.axhspan(low, high, color=color, alpha=0.5, zorder=0)
+    fig.add_hrect(y0=low, y1=high, fillcolor=color, line_width=0, layer="below")
 
-for city in city_colors:
+# one line per city
+for city, color in city_colors.items():
     s = df[df["city"] == city].sort_values("d")
-    ax.plot(s["d"], s["median_multiple"],
-            color=city_colors[city], linewidth=2.2,
-            marker="o", markersize=3.5,
-            label=city, zorder=3)
+    fig.add_trace(go.Scatter(
+        x=s["d"], y=s["median_multiple"],
+        name=city,
+        mode="lines+markers",
+        line=dict(color=color, width=2.5),
+        marker=dict(size=5),
+        hovertemplate="%{y:.2f}<extra>" + city + "</extra>",
+    ))
 
-# event lines and labels at the top
+# event lines with labels at top
+# i split this into two calls because plotly's add_vline + annotation_text
+# is buggy on date axes in newer plotly versions
 for date_str, label in events:
-    ev = pd.to_datetime(date_str, format="%Y-%m")
-    ax.axvline(ev, color="gray", linestyle=":", linewidth=0.9, zorder=2)
-    ax.annotate(label, xy=(ev, 14.2), xytext=(0, 0),
-                textcoords="offset points", ha="center", fontsize=8.5,
-                color="#444",
-                bbox=dict(boxstyle="round,pad=0.3", fc="white",
-                          ec="gray", lw=0.5, alpha=0.9))
+    fig.add_shape(
+        type="line",
+        x0=date_str, x1=date_str,
+        y0=0, y1=1, yref="paper",
+        line=dict(color="gray", width=1, dash="dot"),
+    )
+    fig.add_annotation(
+        x=date_str, y=1.02, yref="paper",
+        text=label, showarrow=False,
+        font=dict(size=10, color="#444"),
+        xanchor="center",
+        bgcolor="white", bordercolor="gray", borderwidth=0.5,
+    )
 
-ax.set_title("Housing Affordability in Toronto, Vancouver, and London, 2019-2024\n"
-             "Median Multiple = composite house price index / median annual household income",
-             loc="left", pad=14)
-ax.set_ylabel("median multiple")
-ax.set_xlabel("")
-ax.set_ylim(7, 15)
-ax.set_yticks(range(7, 16))
-ax.legend(loc="lower left", frameon=False, fontsize=11)
+fig.update_layout(
+    title=dict(
+        text="<b>Housing Affordability across Four Global Cities, 2019-2024</b><br>"
+             "<span style='font-size:12px;color:#666'>"
+             "Median Multiple = composite house price / median annual household income</span>",
+        x=0.02, y=0.96,
+    ),
+    yaxis=dict(title="median multiple", range=[5, 15], dtick=1, showgrid=True, gridcolor="#eee"),
+    xaxis=dict(showgrid=True, gridcolor="#eee"),
+    plot_bgcolor="white",
+    legend=dict(x=0.02, y=0.02, bgcolor="rgba(255,255,255,0.8)"),
+    height=600, width=1100,
+    font=dict(family="Helvetica, Arial", size=11),
+    margin=dict(t=80, b=70, l=60, r=180),
+    hovermode="x unified",  # show all 4 cities at once when hovering on a date
+)
 
-# band labels on right side
-band_x = df["d"].max() + pd.Timedelta(days=20)
+# band labels on the right margin
+band_label_x = df["d"].max() + pd.Timedelta(days=15)
 for low, high, _, label in bands:
-    if low >= 7 and high <= 15:
-        mid = (low + high) / 2
-        if 7 <= mid <= 15:
-            ax.text(band_x, mid, label, fontsize=8, color="#666",
-                    ha="left", va="center")
+    if 5 <= (low + high) / 2 <= 15:
+        fig.add_annotation(
+            x=band_label_x, y=(low + high) / 2,
+            text=label, showarrow=False,
+            font=dict(size=10, color="#666"),
+            xanchor="left",
+        )
 
-fig.text(0.01, 0.01,
-         "sources: crea hpi composite benchmark (toronto, vancouver), uk land registry hpi (london), "
-         "statcan table 11-10-0190-01 + ons regional series (income, 2024 currency).",
-         fontsize=8, color="#888")
+# source line at the bottom
+fig.add_annotation(
+    text="sources: crea hpi (toronto, vancouver), uk land registry hpi (london), "
+         "case-shiller / fred (new york). income from statcan, ons, fred-saipe.",
+    showarrow=False,
+    xref="paper", yref="paper",
+    x=0, y=-0.12, xanchor="left",
+    font=dict(size=9, color="#888"),
+)
 
-plt.tight_layout(rect=[0, 0.04, 1, 1])
 out_path.parent.mkdir(parents=True, exist_ok=True)
-plt.savefig(out_path, dpi=160, bbox_inches="tight")
+fig.write_html(str(out_path), include_plotlyjs="cdn")
 print(f"saved chart to {out_path}")
-plt.show()
+
+subprocess.run(["open", str(out_path)])

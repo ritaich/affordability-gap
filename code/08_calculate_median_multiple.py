@@ -31,6 +31,16 @@ incomes = {
         2023: 87500,
         2024: 89900,
     },
+
+"New York": {
+        2019: 72038,    # statcan-equivalent: us census saipe via fred
+        2020: 73354,
+        2021: 74230,
+        2022: 79463,
+        2023: 82052,
+        2024: 85768,
+    },
+
     "London": {
         2019: 47000,    # estimated from ONS regional series
         2020: 49500,
@@ -72,9 +82,12 @@ london = pd.read_csv(london_path)
 london = london.rename(columns={"avg_price_gbp": "price_local"})
 london["currency"] = "GBP"
 london = london[["city", "date", "price_local", "currency", "hpi"]]
+ny_path = base / "data/clean/newyork_prices.csv"
+newyork = pd.read_csv(ny_path)
+# already in the right format from 15_build_newyork.py
 
 # stack all three cities
-prices = pd.concat([canada, london], ignore_index=True)
+prices = pd.concat([canada, london, newyork], ignore_index=True)
 
 # attach income and compute median multiple
 all_rows = []
