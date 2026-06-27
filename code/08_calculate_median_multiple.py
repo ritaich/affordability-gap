@@ -53,8 +53,7 @@ incomes = {
 
 
 def monthly_income_series(annual):
-    # i anchor each year at june and linearly interpolate between
-    # this matches what statcan / boc / ons all do
+    # i anchor each year at june and linearly interpolate between 
     anchors = pd.DataFrame({
         "date": [pd.Timestamp(year=y, month=6, day=1) for y in annual],
         "income": list(annual.values()),
@@ -63,7 +62,7 @@ def monthly_income_series(annual):
     yr_min, yr_max = min(annual), max(annual)
     full_idx = pd.date_range(f"{yr_min}-01-01", f"{yr_max}-12-01", freq="MS")
     s = anchors.reindex(anchors.index.union(full_idx)).sort_index()
-    s["income"] = s["income"].interpolate(method="time")
+    s["income"] = s["income"].interpolate(method="time", limit_direction="both")
     s = s.reindex(full_idx)
 
     out = s.reset_index().rename(columns={"index": "date"})

@@ -88,7 +88,7 @@ fig.update_layout(
     hovermode="x unified",  # show all 4 cities at once when hovering on a date
 )
 
-# band labels on the right margin
+# band labels on the right margin ( i only labeled the 5 - 15 range to avoid clutter, but the colours should make the rest obvious) 
 band_label_x = df["d"].max() + pd.Timedelta(days=15)
 for low, high, _, label in bands:
     if 5 <= (low + high) / 2 <= 15:
