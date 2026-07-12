@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The affordability gap passion project by Marharyta Varanovich</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        :root {
+            --ink: #221a2e;
+            --ink-soft: #4a3d5b;
+            --muted: #7a6c8a;
+            --light: #b5a8c2;
+            --paper: #fbf4e8;
+            --paper-warm: #f6ebd6;
+            --line: #d8c9c0;
+
+            --lavender: #c9a8dd;
+            --pink: #f2b5c8;
+            --yellow: #e8c96a;
+            --purple: #6d3fa0;
+            --purple-soft: #a380cf;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            font-size: 17px;
+            scroll-behavior: smooth;
+        }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.55;
+            overflow-x: hidden;
+        }
+
+        /* nav bar */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            background: rgba(251, 244, 232, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 100;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.3s;
+        }
+        nav.scrolled { border-color: var(--line); }
+        nav .brand { color: var(--ink); font-weight: 500; }
+        nav .brand em { font-family: 'Lora', serif; font-style: italic; color: var(--purple); font-size: 15px; }
+        nav .nav-links { display: flex; gap: 26px; }
+        nav a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+        nav a:hover { color: var(--purple); }
+
+
+        /* hero */
+        .hero {
+            min-height: 100vh;
+            padding: 130px 40px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-meta {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 32px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .hero-meta span::before { content: '·'; margin-right: 20px; color: var(--light); }
+        .hero-meta span:first-child::before { display: none; }
+
+        h1 {
+            font-family: 'Lora', serif;
+            font-size: clamp(50px, 8vw, 96px);
+            line-height: 0.95;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            margin-bottom: 30px;
+        }
+        h1 em {
+            font-style: italic;
+            font-weight: 500;
+            color: var(--purple);
+            display: inline-block;
+            position: relative;
+        }
+        h1 em::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0;
+            bottom: 8px;
+            height: 12px;
+            background: var(--yellow);
+            opacity: 0.55;
+            z-index: -1;
+        }
+
+        .hero-tagline {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 21px;
+            color: var(--ink-soft);
+            line-height: 1.5;
+            max-width: 480px;
+        }
+
+        .hero-right {
+            position: relative;
+            padding-left: 40px;
+            border-left: 1px solid var(--line);
+        }
+        .hero-lead {
+            font-size: 18px;
+            line-height: 1.65;
+            color: var(--ink-soft);
+            margin-bottom: 40px;
+        }
+        .hero-lead::first-letter {
+            font-family: 'Lora', serif;
+            font-size: 62px;
+            line-height: 0.9;
+            font-weight: 500;
+            float: left;
+            padding: 8px 12px 0 0;
+            color: var(--purple);
+        }
+
+        .byline {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+        .byline a { color: var(--purple); text-decoration: none; border-bottom: 1px solid var(--purple-soft); }
+        .byline a:hover { border-color: var(--purple); }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: var(--muted);
+            text-transform: uppercase;
+            animation: bob 2.4s ease-in-out infinite;
+        }
+        @keyframes bob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(6px); } }
+
+
+        /* section scaffolding */
+        .rule {
+            max-width: 1200px;
+            margin: 100px auto 0;
+            padding: 0 40px;
+        }
+        .rule-inner {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--line) 20%, var(--line) 80%, transparent);
+        }
+
+        section {
+            padding: 90px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            color: var(--purple);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-family: 'Lora', serif;
+            font-size: clamp(38px, 5vw, 58px);
+            font-weight: 500;
+            line-height: 1.05;
+            letter-spacing: -0.01em;
+            margin-bottom: 22px;
+            color: var(--ink);
+        }
+        h2 em {
+            font-style: italic;
+            color: var(--purple);
+        }
+
+        .section-lead {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 19px;
+            color: var(--muted);
+            max-width: 620px;
+            line-height: 1.55;
+        }
+
+
+        /* section 1 */
+        .sec1-grid {
+            display: grid;
+            grid-template-columns: 5fr 3fr;
+            gap: 70px;
+            margin-top: 55px;
+        }
+        .sec1-left { position: relative; }
+        .sec1-right {
+            padding-top: 20px;
+        }
+
+        .pull-quote {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 28px;
+            line-height: 1.35;
+            color: var(--ink-soft);
+            border-left: 3px solid var(--purple);
+            padding: 10px 0 10px 26px;
+        }
+        .pull-quote-cite {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-top: 22px;
+            padding-left: 26px;
+        }
+
+
+        /* key finding */
+        .finding-strip {
+            background: linear-gradient(115deg, var(--pink) 0%, var(--lavender) 55%, var(--yellow) 100%);
+            padding: 45px 55px;
+            margin: 20px auto 0;
+            max-width: 1200px;
+            font-size: 21px;
+            line-height: 1.55;
+            color: var(--ink);
+            position: relative;
+        }
+        .finding-strip::before {
+            content: '01';
+            position: absolute;
+            top: 15px;
+            right: 22px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: rgba(34, 26, 46, 0.5);
+            letter-spacing: 0.12em;
+        }
+        .finding-strip .fig {
+            font-family: 'Lora', serif;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+
+        /* section 2 */
+        .sec2-header {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 60px;
+            align-items: end;
+            margin-bottom: 50px;
+        }
+        .chart-container {
+            background: white;
+            border: 1px solid var(--line);
+            padding: 26px;
+            position: relative;
+        }
+        .chart-container:hover { border-color: var(--purple-soft); }
+
+        .city-picker {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 26px;
+            flex-wrap: wrap;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .city-btn {
+            font-family: inherit;
+            font-size: 12px;
+            padding: 7px 16px;
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: all 0.15s ease;
+        }
+        .city-btn:hover { color: var(--purple); border-color: var(--purple-soft); }
+        .city-btn.active {
+            background: var(--ink);
+            color: var(--paper);
+            border-color: var(--ink);
+        }
+
+
+        /* section 3 */
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            margin: 60px 0;
+            border-top: 2px solid var(--ink);
+            border-bottom: 1px solid var(--line);
+        }
+        .timeline-cell {
+            padding: 32px 24px 32px 0;
+            border-right: 1px solid var(--line);
+        }
+        .timeline-cell:last-child { border-right: none; padding-right: 0; }
+        .timeline-cell .date {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: var(--purple);
+            text-transform: uppercase;
+        }
+        .timeline-cell .event {
+            font-family: 'Lora', serif;
+            font-size: 22px;
+            line-height: 1.25;
+            margin-top: 12px;
+            color: var(--ink);
+        }
+        .timeline-cell .detail {
+            font-size: 14px;
+            color: var(--muted);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+
+        /* section 4 */
+        .sec4-wrap {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 70px;
+            align-items: start;
+            margin-top: 55px;
+        }
+
+        .highlighted-numbers {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .number-row {
+            display: grid;
+            grid-template-columns: 100px 1fr auto;
+            gap: 20px;
+            align-items: baseline;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--line);
+            cursor: default;
+            transition: padding 0.2s;
+        }
+        .number-row:last-child { border-bottom: none; }
+        .number-row:hover {
+            padding-left: 12px;
+        }
+        .number-row .city-name {
+            font-family: 'Lora', serif;
+            font-size: 22px;
+            color: var(--ink);
+        }
+        .number-row .mkt {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+        }
+        .number-row .val {
+            font-family: 'Lora', serif;
+            font-size: 44px;
+            font-weight: 500;
+            color: var(--purple);
+            font-style: italic;
+        }
+
+
+        /* methodology */
+        .methodology-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 60px;
+            align-items: start;
+        }
+        .methodology-note {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 17px;
+            color: var(--muted);
+            line-height: 1.6;
+            padding-top: 24px;
+        }
+        .method-list details {
+            border-top: 1px solid var(--line);
+            padding: 28px 0;
+        }
+        .method-list details:last-child { border-bottom: 1px solid var(--line); }
+        summary {
+            cursor: pointer;
+            font-family: 'Lora', serif;
+            font-weight: 500;
+            font-size: 20px;
+            color: var(--ink);
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            transition: color 0.2s;
+        }
+        summary:hover { color: var(--purple); }
+        summary::after {
+            content: '+';
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 22px;
+            color: var(--purple);
+            font-weight: 400;
+            transition: transform 0.3s;
+        }
+        details[open] summary::after { content: '−'; }
+        details p {
+            color: var(--muted);
+            font-size: 15.5px;
+            line-height: 1.7;
+            margin-top: 18px;
+            max-width: 720px;
+        }
+        details code {
+            background: var(--paper-warm);
+            padding: 3px 8px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            border-radius: 2px;
+        }
+
+
+        /* footer */
+        footer {
+            border-top: 1px solid var(--line);
+            margin-top: 100px;
+            padding: 50px 40px;
+            background: var(--paper-warm);
+        }
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 40px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .footer-inner h4 {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-weight: 500;
+            font-size: 18px;
+            color: var(--ink);
+            margin-bottom: 14px;
+            letter-spacing: 0;
+        }
+        .footer-inner a { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--line); }
+        .footer-inner a:hover { color: var(--purple); border-color: var(--purple); }
+        .footer-inner p { margin-bottom: 8px; }
+
+
+        /* fade in on scroll */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.9s ease, transform 0.9s ease;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+        /* responsive */
+        @media (max-width: 900px) {
+            .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+            .hero-right { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 40px; }
+            .sec1-grid, .sec2-header, .sec4-wrap, .methodology-header { grid-template-columns: 1fr; gap: 40px; }
+            .timeline { grid-template-columns: 1fr 1fr; }
+            .timeline-cell { border-right: none; border-bottom: 1px solid var(--line); }
+            .footer-inner { grid-template-columns: 1fr; }
+            nav .nav-links { display: none; }
+        }
+
+        /* personal note */
+.personal-note {
+    padding: 90px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+.pn-inner {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 60px;
+    max-width: 1000px;
+    margin: 0 auto;
+    align-items: start;
+}
+.pn-marker {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 8px;
+    border-top: 2px solid var(--ink);
+    position: sticky;
+    top: 100px;
+}
+.pn-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--purple);
+    text-transform: uppercase;
+}
+.pn-signature {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--muted);
+}
+.pn-body {
+    max-width: 620px;
+}
+.pn-lead {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 26px;
+    line-height: 1.4;
+    color: var(--ink);
+    margin-bottom: 30px;
+}
+.pn-para {
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin-bottom: 22px;
+}
+.pn-signoff {
+    margin-top: 40px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-transform: uppercase;
+}
+.pn-signoff-name {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 20px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+}
+@media (max-width: 900px) {
+    .pn-inner { grid-template-columns: 1fr; gap: 24px; }
+    .pn-marker { border-top: none; padding-top: 0; position: static; flex-direction: row; align-items: baseline; }
+    .pn-lead { font-size: 22px; }
+    .pn-para { font-size: 17px; }
+}
+    </style>
+</head>
+<body>
+
+<nav id="nav">
+    <div class="brand">the <em>affordability</em> gap</div>
+    <div class="nav-links">
+        <a href="#context">context</a>
+        <a href="#data">the data</a>
+        <a href="#finding">finding</a>
+        <a href="#forecast">forecast</a>
+        <a href="#method">method</a>
+    </div>
+</nav>
+
+
+<header class="hero">
+    <div class="hero-inner">
+        <div>
+            <div class="hero-meta">
+                <span>quantitative economics</span>
+                <span>ib passion project</span>
+                <span>2025 - 2026</span>
+            </div>
+            <h1>The<br><em>affordability</em><br>gap</h1>
+            <p class="hero-tagline">how the same interest rate cycle produced four completely different housing markets and why the difference is not an accident ;]</p>
+        </div>
+
+        <div class="hero-right">
+            <p class="hero-lead">Between january 2019 and december 2024, mortgage rates around the world followed almost the same path. But the effect on ordinary buyers in Toronto, Vancouver, London, and New York was nothing like the same! My project measures how each city responded and shows that the differences trace back to something surprisingly simple: how long people can lock in a mortgage rate</p>
+            <p class="byline">by <a href="https://github.com/ritaich">Marharyta Varanovich</a>  <a href="https://github.com/ritaich/affordability-gap">my github profile with the source code and other resources, click it</a></p>
+        </div>
+    </div>
+
+    <div class="scroll-hint">scroll downnn ↓</div>
+</header>
+
+
+<div class="rule"><div class="rule-inner"></div></div>
+
+<div class="rule"><div class="rule-inner"></div></div>
+
+
+<section class="personal-note fade-in" aria-label="Author's note">
+    <div class="pn-inner">
+        <div class="pn-marker">
+            <span class="pn-label">A little note</span>
+            <span class="pn-signature">M.V.</span>
+        </div>
+
+        <div class="pn-body">
+            <p class="pn-lead">i started this project because i kept hearing the same sentence in every conversation about housing.</p>
+
+            <p class="pn-para">
+                "it's just impossible now." my friends said it about apartments in warsaw. my cousin said it about vancouver. my economics teacher said it about london when he was talking about his students who wanted to stay after graduation and everyone agreed on the sentence, but nobody could tell me exactly how impossible, or whether it had really changed that much, or why some cities felt like they were breaking while others were only bending. so i went looking for the numbers.
+            </p>
+
+            <p class="pn-para">
+                what i actually wanted to know was small and specific. when the bank of canada raises the mortgage rate by one percentage point, how much worse does life get for a person trying to buy a house in vancouver, and is it worse than for someone doing the same thing in new york? that is the whole question. everything else in this project (like the dataset, the regressions, the forecasts) is built to answer some version of it.
+            </p>
+
+            <p class="pn-para">
+                i am eightneen and i am not an economist, but i wanted to try treating this like one would because i want to become a quantitative economist. all of the data here comes from official sources, all of the code is on github, and everything can be pulled apart and checked. if something looks wrong, it probably is, and i would rather know. Also project i started at the beggining of 2025, so some of the forecasts are already out of date, but i wanted to keep them here because they show how the model works and what it was predicting at the time.
+            </p>
+
+            <p class="pn-signoff">
+                <span class="pn-signoff-name">Marharyta</span>
+                <span class="pn-signoff-meta">warsaw, note from 2026</span>
+            </p>
+        </div>
+    </div>
+</section>
+
+<section id="context">
+    <div class="section-label">1. Context</div>
+    <h2>Four cities, one <em>global</em> rate cycle</h2>
+    <p class="section-lead">Every central bank raised rates aggressively in 2022 to fight inflation. But the pain landed on households in wildly different ways</p>
+
+    <div class="sec1-grid">
+        <div class="sec1-left">
+            <p style="font-size: 18px; line-height: 1.65; color: var(--ink-soft); margin-bottom: 24px;">
+                In march 2022 the Bank of Canada, Bank of England, and Federal Reserve began the sharpest coordinated tightening cycle in forty years. Within eighteen months, policy rates went from near zero to above five percent in all three countries!
+            </p>
+            <p style="font-size: 18px; line-height: 1.65; color: var(--ink-soft);">
+                On paper, buyers everywhere faced the same shock. In practice, a home in Vancouver became mathematically unaffordable, while a home in New York barely moved on the affordability scale. The gap is exactly what my project measures
+            </p>
+        </div>
+
+        <div class="sec1-right">
+            <div class="pull-quote">
+                "In some markets the rate hike hit borrowers immediately. In others, existing owners were essentially untouched for years. The difference is not random. It follows the length of a typical mortgage lock in each country almost exactly"
+            </div>
+            <div class="pull-quote-cite">Carolyn Rogers, Bank of Canada, 2024</div>
+        </div>
+    </div>
+</section>
+
+
+<div class="finding-strip fade-in">
+    A 1 percentage point rise in the mortgage rate raises the typical housing burden by <span class="fig">9.0 points in Vancouver</span>, <span class="fig">7.4 in Toronto</span>, <span class="fig">7.0 in London</span>, and <span class="fig">5.0 in New York</span>. That ranking is definitely not random, as i said previously. It follows the length of a typical mortgage lock in each country almost exactly
+</div>
+
+
+<section id="data" class="fade-in">
+    <div class="section-label">2. The Data</div>
+
+    <div class="sec2-header">
+        <div>
+            <h2>How affordability <em>moved</em></h2>
+            <p class="section-lead">The Median Multiple compares house prices to annual household income. It tells you how many years of income a typical home costs</p>
+        </div>
+        <div style="text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); letter-spacing: 0.05em;">
+            72 months<br>
+            4 cities<br>
+            monthly frequency
+        </div>
+    </div>
+
+    <div class="city-picker" id="picker_affordability">
+        <button class="city-btn active" data-city="all">All</button>
+        <button class="city-btn" data-city="Toronto">Toronto</button>
+        <button class="city-btn" data-city="Vancouver">Vancouver</button>
+        <button class="city-btn" data-city="London">London</button>
+        <button class="city-btn" data-city="New York">New York</button>
+    </div>
+
+    <div class="chart-container" id="chart_affordability"></div>
+</section>
+
+
+<section class="fade-in">
+    <div class="section-label">3. The Rate Cycle</div>
+    <h2>A timeline of the <em>shock</em></h2>
+
+    <div class="timeline">
+        <div class="timeline-cell">
+            <div class="date">mar 2020</div>
+            <div class="event">Central banks slash rates to zero</div>
+            <div class="detail">covid response begins</div>
+        </div>
+        <div class="timeline-cell">
+            <div class="date">mar 2022</div>
+            <div class="event">Bank of Canada raises for the first time</div>
+            <div class="detail">others follow within weeks</div>
+        </div>
+        <div class="timeline-cell">
+            <div class="date">jul 2023</div>
+            <div class="event">Peak policy rates hit</div>
+            <div class="detail">above 5% almost everywhere</div>
+        </div>
+        <div class="timeline-cell">
+            <div class="date">dec 2024</div>
+            <div class="event">Rates begin easing, unevenly</div>
+            <div class="detail">but only Canada is truly cutting</div>
+        </div>
+    </div>
+</section>
+
+
+<section id="finding" class="fade-in">
+    <div class="section-label">4. Result i achieved</div>
+
+    <div class="sec4-wrap">
+        <div>
+            <h2>What <em>drives</em> housing burden</h2>
+            <p class="section-lead">A regression of the Mortgage Debt Service Ratio on the mortgage rate, controlling for prices, income, and unemployment. Newey West robust standard errors</p>
+            <p style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 30px; letter-spacing: 0.08em;">
+                β · pp of MDSR per 1pp of rate
+            </p>
+        </div>
+
+        <div class="highlighted-numbers">
+            <div class="number-row">
+                <span class="city-name">Vancouver</span>
+                <span class="mkt">5yr fixed</span>
+                <span class="val">9.0</span>
+            </div>
+            <div class="number-row">
+                <span class="city-name">Toronto</span>
+                <span class="mkt">5yr fixed</span>
+                <span class="val">7.4</span>
+            </div>
+            <div class="number-row">
+                <span class="city-name">London</span>
+                <span class="mkt">2yr fixed</span>
+                <span class="val">7.0</span>
+            </div>
+            <div class="number-row">
+                <span class="city-name">New York</span>
+                <span class="mkt">30yr fixed</span>
+                <span class="val">5.0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container" style="margin-top: 60px;" id="chart_coefficient"></div>
+</section>
+
+
+<section id="forecast" class="fade-in">
+    <div class="section-label">5. What Comes Next</div>
+    <h2>Three <em>possible</em> 2025s</h2>
+    <p class="section-lead">Conditional forecasts under three interest rate paths, holding all else constant at december 2024 levels. The gap between scenarios reflects each market's rate sensitivity alone.</p>
+
+    <div class="chart-container" style="margin-top: 45px;" id="chart_forecast"></div>
+</section>
+
+
+<section id="method" class="fade-in">
+    <div class="section-label">06 · Method</div>
+
+    <div class="methodology-header">
+        <div>
+            <h2>How this was <em>built</em>.</h2>
+        </div>
+        <div class="methodology-note">
+            all data is from official public sources. all analysis is reproducible from the code in the repository. any errors are mine.
+        </div>
+    </div>
+
+    <div class="method-list">
+        <details>
+            <summary>Research question</summary>
+            <p>To what extent do mortgage interest rates, household income, housing supply, and unemployment explain housing affordability across four major global cities (Toronto, Vancouver, London, and New York) between january 2019 and december 2024, and how accurately can these factors predict short term affordability shifts?</p>
+        </details>
+
+        <details>
+            <summary>Data sources</summary>
+            <p><strong>House prices.</strong> CREA Composite HPI Benchmark, seasonally adjusted (Toronto and Vancouver). UK Land Registry HPI (London). FRED Case Shiller NYXRSA anchored to the 2024 metro median (New York).</p>
+            <p><strong>Household income.</strong> Statistics Canada Table 11 10 0190 01. UK ONS regional estimates. FRED MHINY36000A052NCEN for New York state.</p>
+            <p><strong>Mortgage rates.</strong> Statistics Canada v733833 (5 year conventional). Bank of England IUMBV34 (UK 2 year fixed 75 percent LTV). FRED MORTGAGE30US (US 30 year fixed).</p>
+            <p><strong>Unemployment.</strong> FRED LRHUTTTTCAM156S (Canada), LRHUTTTTGBM156S (UK), NYURN (New York state).</p>
+        </details>
+
+        <details>
+            <summary>Affordability indices</summary>
+            <p><strong>Median Multiple.</strong> Composite house price divided by median annual household income. The standard Demographia measure of long run housing cost.</p>
+            <p><strong>MDSR (Mortgage Debt Service Ratio).</strong> Monthly amortizing mortgage payment (at prevailing rate, 25 year amortization for Canada and the UK, 30 year for the US, financed at 100 percent of price) divided by monthly household income.</p>
+        </details>
+
+        <details>
+            <summary>Regression specification</summary>
+            <p>OLS per city with the model <code>MDSR = β₀ + β₁·rate + β₂·unemployment + β₃·log(price) + β₄·log(income) + ε</code>.</p>
+            <p>Standard errors use the Newey West HAC estimator with a 6 month lag. Diagnostics include VIF (multicollinearity), Breusch Pagan (heteroskedasticity), and Durbin Watson (autocorrelation). The lagged rate was dropped from the final model after VIF values above 100 indicated near perfect collinearity with the contemporaneous rate.</p>
+        </details>
+
+        <details>
+            <summary>Limitations</summary>
+            <p>Household income coverage varies by country. New York state income substitutes for the discontinued NYC metro series and likely understates true unaffordability. London income relies on estimated ONS regional gross figures. Confidence intervals reflect model uncertainty but not the underlying data source uncertainty.</p>
+        </details>
+    </div>
+</section>
+
+
+<footer>
+    <div class="footer-inner">
+        <div>
+            <h4>The Affordability Gap</h4>
+            <p>a comparative study of housing affordability across four global cities, built entirely on public data.</p>
+        </div>
+        <div>
+            <h4>Elsewhere</h4>
+            <p><a href="https://github.com/ritaich/affordability-gap">github repository</a></p>
+            <p><a href="https://github.com/ritaich">github profile</a></p>
+        </div>
+        <div>
+            <h4>Colophon</h4>
+            <p>built in Lora and IBM Plex Mono.</p>
+            <p>Marharyta Varanovich · 2025</p>
+        </div>
+    </div>
+</footer>
+
+<script src="data.js"></script>
+<script>
+    // nav shadow on scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // fade in on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // city picker interactivity
+    document.querySelectorAll('.city-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    //  chart styling 
+    const palette = {
+        Toronto:    "#ee6b6e",
+        Vancouver:  "#88E788",
+        London:     "#90D5FF",
+        "New York": "#A865C9",
+    };
+    const cityOrder = ["Toronto", "Vancouver", "London", "New York"];
+
+    const baseLayout = {
+        font: { family: "Lora, serif", size: 12, color: "#4a3d5b" },
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
+        margin: { t: 30, b: 50, l: 60, r: 30 },
+        hovermode: "x unified",
+        xaxis: {
+            showgrid: true, gridcolor: "#f0e5dc",
+            zeroline: false, showline: true, linecolor: "#d8c9c0",
+        },
+        yaxis: {
+            showgrid: true, gridcolor: "#f0e5dc",
+            zeroline: false, showline: true, linecolor: "#d8c9c0",
+        },
+    };
+    const chartConfig = { displayModeBar: false, responsive: true };
+
+    //  chart 1: affordability over time 
+    function drawAffordability(activeCity) {
+        const traces = [];
+        for (const city of cityOrder) {
+            const d = AFFORDABILITY[city];
+            const dim = (activeCity !== "all" && city !== activeCity);
+            traces.push({
+                x: d.dates,
+                y: d.mm,
+                name: city,
+                mode: "lines",
+                line: { color: palette[city], width: dim ? 1 : 2.5 },
+                opacity: dim ? 0.15 : 1,
+                hovertemplate: `<b>${city}</b>: %{y:.2f}<extra></extra>`,
+            });
+        }
+        Plotly.react("chart_affordability", traces, {
+            ...baseLayout,
+            yaxis: { ...baseLayout.yaxis, title: "median multiple (price ÷ annual income)" },
+            legend: { orientation: "h", y: -0.15, x: 0.5, xanchor: "center" },
+            height: 480,
+        }, chartConfig);
+    }
+
+    drawAffordability("all");
+
+    // city picker hooks into this chart
+    document.querySelectorAll("#picker_affordability .city-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            drawAffordability(btn.dataset.city);
+        });
+    });
+
+    //  chart 2: coefficient comparison 
+    (function drawCoefficient() {
+        const order = ["Vancouver", "Toronto", "London", "New York"];  // by magnitude
+        const x = order;
+        const y = order.map(c => COEFFICIENTS[c].coef);
+        const errors = order.map(c => COEFFICIENTS[c].coef - COEFFICIENTS[c].ci_low);
+        const colors = order.map(c => palette[c]);
+        const markets = { Vancouver: "5yr fixed", Toronto: "5yr fixed", London: "2yr fixed", "New York": "30yr fixed" };
+        const labels = order.map(c => `<b>${COEFFICIENTS[c].coef}</b><br>${markets[c]}`);
+
+        const trace = {
+            x, y,
+            type: "bar",
+            marker: { color: colors, line: { color: "#221a2e", width: 1 } },
+            error_y: { type: "data", array: errors, thickness: 1.5, width: 12, color: "#221a2e" },
+            text: labels,
+            textposition: "outside",
+            hovertemplate: order.map((c, i) => (
+                `<b>${c}</b><br>` +
+                `coefficient: ${y[i]}<br>` +
+                `95% CI: [${COEFFICIENTS[c].ci_low}, ${COEFFICIENTS[c].ci_high}]<br>` +
+                `market: ${markets[c]}<extra></extra>`
+            )),
+        };
+
+        Plotly.react("chart_coefficient", [trace], {
+            ...baseLayout,
+            yaxis: { ...baseLayout.yaxis, title: "pp increase in MDSR per 1pp of rate", range: [0, 11] },
+            xaxis: { ...baseLayout.xaxis, showgrid: false },
+            showlegend: false,
+            height: 440,
+            margin: { t: 40, b: 60, l: 60, r: 30 },
+        }, chartConfig);
+    })();
+
+    //  chart 3: forecast scenarios (2x2 subplots) 
+    (function drawForecast() {
+        const scenarioColors = {
+            optimistic:   "#7fa650",
+            baseline:     "#7a6c8a",
+            pessimistic: "#b85450",
+        };
+        const scenarioFills = {
+            optimistic:   "rgba(127, 166, 80, 0.15)",
+            baseline:     "rgba(122, 108, 138, 0.15)",
+            pessimistic: "rgba(184, 84, 80, 0.15)",
+        };
+
+        const cities = cityOrder;
+        const traces = [];
+        const layout = {
+            ...baseLayout,
+            height: 720,
+            hovermode: "x unified",
+            showlegend: true,
+            legend: { orientation: "h", y: 1.06, x: 0.5, xanchor: "center", font: { size: 11 } },
+            grid: { rows: 2, columns: 2, pattern: "independent" },
+            margin: { t: 60, b: 40, l: 60, r: 30 },
+        };
+
+        cities.forEach((city, i) => {
+            const axisSuffix = i === 0 ? "" : String(i + 1);
+            const xkey = `x${axisSuffix}`;
+            const ykey = `y${axisSuffix}`;
+
+            // historical mdsr
+            const h = FORECAST[city];
+            traces.push({
+                x: h.history_dates, y: h.history_mdsr,
+                type: "scatter", mode: "lines",
+                xaxis: xkey, yaxis: ykey,
+                name: "historical",
+                line: { color: "#221a2e", width: 2 },
+                showlegend: i === 0,
+                hovertemplate: `<b>${city}</b><br>MDSR: %{y:.1f}%<extra></extra>`,
+            });
+
+            for (const sc of ["optimistic", "baseline", "pessimistic"]) {
+                const s = h[sc];
+
+                // confidence band (drawn first so it sits below the line)
+                traces.push({
+                    x: [...s.dates, ...s.dates.slice().reverse()],
+                    y: [...s.ci_high, ...s.ci_low.slice().reverse()],
+                    fill: "toself", fillcolor: scenarioFills[sc],
+                    line: { width: 0 },
+                    xaxis: xkey, yaxis: ykey,
+                    hoverinfo: "skip", showlegend: false,
+                });
+
+                // scenario forecast line
+                traces.push({
+                    x: s.dates, y: s.mdsr,
+                    type: "scatter", mode: "lines",
+                    xaxis: xkey, yaxis: ykey,
+                    name: sc,
+                    line: { color: scenarioColors[sc], width: 2, dash: "dot" },
+                    showlegend: i === 0,
+                    hovertemplate: `${sc}: %{y:.1f}%<extra></extra>`,
+                });
+            }
+
+            // subplot title as annotation
+            layout[`annotations`] = (layout.annotations || []).concat([{
+                text: `<b>${city}</b>`,
+                showarrow: false,
+                x: 0.02, xref: `${xkey} domain`,
+                y: 0.95, yref: `${ykey} domain`,
+                xanchor: "left", yanchor: "top",
+                font: { family: "Lora, serif", size: 15, color: "#221a2e" },
+            }]);
+
+            // per-subplot axis styling
+            layout[`xaxis${axisSuffix}`] = { ...baseLayout.xaxis };
+            layout[`yaxis${axisSuffix}`] = { ...baseLayout.yaxis, ticksuffix: "%" };
+        });
+
+        Plotly.react("chart_forecast", traces, layout, chartConfig);
+    })();
+</script>
+
+</body>
+</html>
