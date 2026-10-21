@@ -1,0 +1,4 @@
+case,loan_at_start,rate_start_pct,payment_start,balance_at_renewal,rate_renewal_pct,payment_after_renewal,payment_rise_pct
+"canada 5y fixed, 2021 rate to 2024 rate",600000,3.28,2933.0,515794.0,5.84,3648.0,24.4
+"uk 2y fixed, 2021 rate to 2023 rate",400000,1.45,1590.0,373059.0,5.31,2344.0,47.4
+us 30y locked at 2021 rate vs new buyer at 2024 rate,500000,2.96,2097.0,,6.72,3233.0,54.2

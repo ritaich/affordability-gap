@@ -1,0 +1,5 @@
+city,max_vif_with_lag,vif_rate,vif_rate_lag1,bp_lm_stat,bp_p_value,durbin_watson
+Toronto,140.5,140.5,123.0,15.63,0.0036,0.142
+Vancouver,130.0,130.0,116.5,14.37,0.0062,0.193
+London,37.1,37.1,34.2,15.4,0.0039,0.431
+New York,65.7,51.4,52.1,13.76,0.0081,0.366

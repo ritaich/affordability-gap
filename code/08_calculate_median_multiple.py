@@ -51,7 +51,18 @@ incomes = {
     },
 }
 
+# the incomes above are in 2024 constant money, but prices are in the money of each year
+# i turn them back into money of each year using cpi (canada: statcan 18-10-0005-01, 2002=100, uk: ons d7bt, 2015=100)
+cpi = {
+    "Canada": {2019: 136.0, 2020: 137.0, 2021: 141.6, 2022: 151.2, 2023: 157.1, 2024: 160.9},
+    "UK": {2019: 107.8, 2020: 108.7, 2021: 111.6, 2022: 121.7, 2023: 130.5, 2024: 133.9},
+}
+cpi_country = {"Toronto": "Canada", "Vancouver": "Canada", "London": "UK"}
 
+for city, country in cpi_country.items():
+    for yr in incomes[city]:
+        incomes[city][yr] = round(incomes[city][yr] * cpi[country][yr] / cpi[country][2024])
+        
 def monthly_income_series(annual):
     # i anchor each year at june and linearly interpolate between 
     anchors = pd.DataFrame({
